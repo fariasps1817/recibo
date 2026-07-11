@@ -36,7 +36,7 @@ python -m http.server 8080
 | Arquivo | Descrição |
 |---|---|
 | `index.html` | Aplicação completa (HTML + CSS + JS, logo e manifest embutidos). |
-| `html2pdf.bundle.min.js` | Biblioteca de geração de PDF (local, sem CDN). |
+| `jspdf.umd.min.js` | Biblioteca de geração de PDF (local, sem CDN). |
 | `netlify.toml` | Configuração de publicação no Netlify. |
 | `r.jpeg` | Logo da RICTEC (também usada como ícone). |
 | `ri.jpeg` | Panfleto original com os dados da empresa. |
@@ -51,8 +51,9 @@ python -m http.server 8080
 
 ## Tecnologia
 
-HTML, CSS e JavaScript puro. A geração de PDF usa a biblioteca
-[html2pdf.js](https://github.com/eKoopmans/html2pdf.js) servida **localmente**
-(sem CDN — evita bloqueios de proteção de rastreamento e funciona offline). O botão
-*Baixar PDF* gera e **baixa o arquivo diretamente** (folha A4 retrato), com a opção
-de abrir/salvar oferecida pelo próprio navegador/celular.
+HTML, CSS e JavaScript puro. O recibo em PDF é **desenhado vetorialmente** com o
+[jsPDF](https://github.com/parallax/jsPDF) (servido localmente, sem CDN): texto
+nítido, coordenadas exatas em folha **A4 retrato**, sem rasterização — portanto
+nunca sai truncado ou desconfigurado, em qualquer aparelho. O botão *Baixar PDF*
+baixa o arquivo diretamente; o *WhatsApp* gera o mesmo PDF e o compartilha em anexo
+pela folha nativa do celular (com fallback para texto onde não houver suporte).
