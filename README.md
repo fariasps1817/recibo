@@ -13,7 +13,9 @@ rápida pelo celular. Sem banco de dados, sem servidor — roda 100% no navegado
 - Pré-visualização do recibo (colapsável) com a logo da empresa.
 - **Exportar em PDF** pela impressão nativa do navegador — folha **A4 retrato**,
   recibo ocupando a **metade superior** com linha de corte, texto nítido (vetorial).
-- **Enviar por WhatsApp** o resumo do recibo em texto.
+- **Enviar por WhatsApp**: no celular, compartilha o **PDF em anexo** pela folha de
+  compartilhamento nativa (Web Share API); onde não houver suporte, envia o resumo
+  em texto.
 - **Dados do emitente** (nome, CPF, telefone, endereço, cidade) salvos no próprio
   aparelho — preenche uma vez e não precisa repetir.
 

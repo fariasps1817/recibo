@@ -574,19 +574,9 @@ function gerarPDF() {
   btn.disabled = true;
   btn.innerHTML = "Gerando…";
 
-  const opt = {
-    margin: [12, 12, 12, 12],
-    filename: nomeArquivo(),
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 3, useCORS: true, backgroundColor: "#ffffff" },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-  };
-
   setTimeout(function () {
-    html2pdf().set(opt).from($("recibo")).save().then(function () {
-      // confirma a numeração após emitir
-      const n = parseInt($("numero").value.trim(), 10);
-      if (!isNaN(n)) LS.setItem("rictec_num", String(n));
+    html2pdf().set(opcoesPDF()).from($("recibo")).save().then(function () {
+      confirmarNumeracao();
       btn.disabled = false;
       btn.innerHTML = original;
     }).catch(function () {
@@ -597,16 +587,27 @@ function gerarPDF() {
   }, 80);
 }
 
-/* ===== Compartilhar via WhatsApp (texto) ===== */
-function enviarWhats() {
-  if (!validar()) {
-    document.querySelector(".erro-campo").scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
-  }
+/* ===== Opções do PDF (compartilhadas) ===== */
+function opcoesPDF() {
+  return {
+    margin: [12, 12, 12, 12],
+    filename: nomeArquivo(),
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 3, useCORS: true, backgroundColor: "#ffffff" },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+}
+
+function confirmarNumeracao() {
+  const n = parseInt($("numero").value.trim(), 10);
+  if (!isNaN(n)) LS.setItem("rictec_num", String(n));
+}
+
+/* ===== Texto-resumo do recibo ===== */
+function textoRecibo() {
   const valorNum = parseValor($("valor").value);
   const cidade = $("emitCidade").value.trim() || "Cascavel/CE";
-  const texto =
-`*RECIBO RICTEC* Nº ${$("numero").value.trim()}
+  return `*RECIBO RICTEC* Nº ${$("numero").value.trim()}
 ------------------------------
 Recebi de *${$("cliente").value.trim()}*
 a importância de *${formatMoeda(valorNum)}*
@@ -615,7 +616,60 @@ referente a *${$("servico").value.trim()}*.
 ${$("pagamento").value ? "Pagamento: " + $("pagamento").value + "\n" : ""}${cidade}, ${new Date().toLocaleDateString("pt-BR")}
 
 _${$("emitNome").value.trim() || "Ricardo"} — RICTEC_`;
-  window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank");
+}
+
+/* verifica se o navegador consegue compartilhar arquivos (celular) */
+function podeCompartilharArquivo() {
+  try {
+    if (!navigator.canShare) return false;
+    const teste = new File([new Blob(["%PDF-"], { type: "application/pdf" })], "t.pdf", { type: "application/pdf" });
+    return navigator.canShare({ files: [teste] });
+  } catch (e) { return false; }
+}
+
+function abrirWhatsTexto() {
+  window.open("https://wa.me/?text=" + encodeURIComponent(textoRecibo()), "_blank");
+}
+
+/* ===== Compartilhar via WhatsApp (PDF em anexo, com fallback para texto) ===== */
+function enviarWhats() {
+  if (!validar()) {
+    document.querySelector(".erro-campo").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  // sem suporte a anexo (ex.: desktop): envia texto como antes
+  if (typeof html2pdf === "undefined" || !podeCompartilharArquivo()) {
+    abrirWhatsTexto();
+    return;
+  }
+
+  $("reciboCard").classList.add("aberto");
+  const btn = $("btnZap");
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = "Gerando…";
+
+  setTimeout(function () {
+    html2pdf().set(opcoesPDF()).from($("recibo")).outputPdf("blob").then(function (blob) {
+      const arquivo = new File([blob], nomeArquivo(), { type: "application/pdf" });
+      return navigator.share({
+        files: [arquivo],
+        title: "Recibo RICTEC",
+        text: textoRecibo()
+      });
+    }).then(function () {
+      confirmarNumeracao();
+    }).catch(function (err) {
+      // usuário cancelou a folha de compartilhamento: não faz nada
+      if (err && (err.name === "AbortError" || err.name === "NotAllowedError" && /cancel/i.test(err.message || ""))) return;
+      // qualquer outra falha: recorre ao envio de texto
+      abrirWhatsTexto();
+    }).finally(function () {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    });
+  }, 80);
 }
 
 /* ===== Novo recibo ===== */
