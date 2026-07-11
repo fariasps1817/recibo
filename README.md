@@ -34,6 +34,7 @@ python -m http.server 8080
 | Arquivo | Descrição |
 |---|---|
 | `index.html` | Aplicação completa (HTML + CSS + JS, logo e manifest embutidos). |
+| `html2pdf.bundle.min.js` | Biblioteca de geração de PDF (local, sem CDN). |
 | `netlify.toml` | Configuração de publicação no Netlify. |
 | `r.jpeg` | Logo da RICTEC (também usada como ícone). |
 | `ri.jpeg` | Panfleto original com os dados da empresa. |
@@ -48,7 +49,8 @@ python -m http.server 8080
 
 ## Tecnologia
 
-HTML, CSS e JavaScript puro, **sem dependências externas** (nenhum CDN). A geração
-de PDF usa a **impressão nativa** do navegador (`window.print()` + folha de estilo
-`@media print`), garantindo texto vetorial nítido e funcionamento offline. No
-celular, o botão *Baixar PDF* abre a opção **Salvar como PDF / Compartilhar**.
+HTML, CSS e JavaScript puro. A geração de PDF usa a biblioteca
+[html2pdf.js](https://github.com/eKoopmans/html2pdf.js) servida **localmente**
+(sem CDN — evita bloqueios de proteção de rastreamento e funciona offline). O botão
+*Baixar PDF* gera e **baixa o arquivo diretamente** (folha A4 retrato), com a opção
+de abrir/salvar oferecida pelo próprio navegador/celular.
