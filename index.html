@@ -586,8 +586,9 @@ function comReciboRenderizado(acao) {
   const clone = $("recibo").cloneNode(true);
   clone.style.width = "800px";
   clone.style.margin = "0";
-  // remove ids duplicados do clone (evita conflito de getElementById)
-  clone.removeAttribute("id");
+  // IMPORTANTE: manter id="recibo" no clone — todo o CSS do recibo é escopado
+  // por #recibo (ex.: "#recibo .r-valor"). Só removemos os ids dos filhos
+  // (usados apenas por JS), evitando duplicidade sem perder a estilização.
   clone.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
   wrap.appendChild(clone);
   document.body.appendChild(wrap);
