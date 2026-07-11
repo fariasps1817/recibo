@@ -257,7 +257,7 @@
       <input id="emitEnd" type="text" placeholder="Rua, nº, bairro — cidade/UF" />
 
       <label for="emitCidade">Cidade (para a data do recibo)</label>
-      <input id="emitCidade" type="text" placeholder="Fortaleza/CE" />
+      <input id="emitCidade" type="text" placeholder="Cascavel/CE" />
 
       <div class="aviso-salvo" id="avisoSalvo">✓ Dados salvos neste aparelho.</div>
     </div>
@@ -442,7 +442,7 @@ const CAMPOS_EMIT = {
   emitCpf: "",
   emitFone: "(85) 98806-4269",
   emitEnd: "",
-  emitCidade: "Fortaleza/CE"
+  emitCidade: "Cascavel/CE"
 };
 
 function carregarEmitente() {
@@ -492,7 +492,7 @@ function render() {
   const dataVal = $("data").value || hoje();
   const [ano, mes, dia] = dataVal.split("-");
   const meses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
-  const cidade = $("emitCidade").value.trim() || "Fortaleza/CE";
+  const cidade = $("emitCidade").value.trim() || "Cascavel/CE";
   $("rDataLocal").textContent = `${cidade}, ${parseInt(dia,10)} de ${meses[parseInt(mes,10)-1]} de ${ano}.`;
 
   // emitente
@@ -578,7 +578,7 @@ function enviarWhats() {
     return;
   }
   const valorNum = parseValor($("valor").value);
-  const cidade = $("emitCidade").value.trim() || "Fortaleza/CE";
+  const cidade = $("emitCidade").value.trim() || "Cascavel/CE";
   const texto =
 `*RECIBO RICTEC* Nº ${$("numero").value.trim()}
 ------------------------------
