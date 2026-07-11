@@ -555,6 +555,58 @@ function nomeArquivo() {
   return `Recibo-${$("numero").value.trim()}-${cli}.pdf`;
 }
 
+/* ===== Opções do PDF (compartilhadas) ===== */
+function opcoesPDF() {
+  return {
+    margin: [12, 12, 12, 12],
+    filename: nomeArquivo(),
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 900 },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+}
+
+function confirmarNumeracao() {
+  const n = parseInt($("numero").value.trim(), 10);
+  if (!isNaN(n)) LS.setItem("rictec_num", String(n));
+}
+
+/*
+ * Renderiza o recibo de forma DETERMINÍSTICA:
+ * clona o #recibo num container fora da tela com largura fixa (800px),
+ * espera a logo decodificar e o layout assentar, e só então executa a
+ * geração. Evita capturas parciais/incompletas causadas pela largura
+ * estreita do celular ou pelo recibo recém-expandido não ter "assentado".
+ * `acao(clone)` deve retornar uma Promise (ex.: html2pdf(...).save()).
+ */
+function comReciboRenderizado(acao) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText =
+    "position:fixed;left:-10000px;top:0;width:800px;background:#ffffff;z-index:-1;";
+  const clone = $("recibo").cloneNode(true);
+  clone.style.width = "800px";
+  clone.style.margin = "0";
+  // remove ids duplicados do clone (evita conflito de getElementById)
+  clone.removeAttribute("id");
+  clone.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
+  wrap.appendChild(clone);
+  document.body.appendChild(wrap);
+  // força um layout síncrono (reflow) do clone
+  void clone.offsetHeight;
+
+  const img = clone.querySelector("img");
+  const esperaImg = (img && img.decode) ? img.decode().catch(function () {}) : Promise.resolve();
+  const limpar = function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); };
+
+  return esperaImg
+    .then(function () {
+      // pequeno atraso garante que a logo e o layout assentaram
+      return new Promise(function (resolve) { setTimeout(resolve, 150); });
+    })
+    .then(function () { void clone.offsetHeight; return acao(clone); })
+    .then(function (res) { limpar(); return res; }, function (err) { limpar(); throw err; });
+}
+
 /* ===== Gerar PDF (download direto via html2pdf, folha A4) ===== */
 function gerarPDF() {
   if (!validar()) {
@@ -566,41 +618,21 @@ function gerarPDF() {
     return;
   }
 
-  // garante que o recibo esteja expandido (elemento oculto não renderiza)
-  $("reciboCard").classList.add("aberto");
-
   const btn = $("btnPdf");
   const original = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = "Gerando…";
 
-  setTimeout(function () {
-    html2pdf().set(opcoesPDF()).from($("recibo")).save().then(function () {
-      confirmarNumeracao();
-      btn.disabled = false;
-      btn.innerHTML = original;
-    }).catch(function () {
-      btn.disabled = false;
-      btn.innerHTML = original;
-      alert("Não foi possível gerar o PDF. Tente novamente.");
-    });
-  }, 80);
-}
-
-/* ===== Opções do PDF (compartilhadas) ===== */
-function opcoesPDF() {
-  return {
-    margin: [12, 12, 12, 12],
-    filename: nomeArquivo(),
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 3, useCORS: true, backgroundColor: "#ffffff" },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-  };
-}
-
-function confirmarNumeracao() {
-  const n = parseInt($("numero").value.trim(), 10);
-  if (!isNaN(n)) LS.setItem("rictec_num", String(n));
+  comReciboRenderizado(function (clone) {
+    return html2pdf().set(opcoesPDF()).from(clone).save();
+  }).then(function () {
+    confirmarNumeracao();
+  }).catch(function () {
+    alert("Não foi possível gerar o PDF. Tente novamente.");
+  }).finally(function () {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  });
 }
 
 /* ===== Texto-resumo do recibo ===== */
@@ -644,32 +676,31 @@ function enviarWhats() {
     return;
   }
 
-  $("reciboCard").classList.add("aberto");
   const btn = $("btnZap");
   const original = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = "Gerando…";
 
-  setTimeout(function () {
-    html2pdf().set(opcoesPDF()).from($("recibo")).outputPdf("blob").then(function (blob) {
-      const arquivo = new File([blob], nomeArquivo(), { type: "application/pdf" });
-      return navigator.share({
-        files: [arquivo],
-        title: "Recibo RICTEC",
-        text: textoRecibo()
-      });
+  comReciboRenderizado(function (clone) {
+    return html2pdf().set(opcoesPDF()).from(clone).outputPdf("blob");
+  }).then(function (blob) {
+    const arquivo = new File([blob], nomeArquivo(), { type: "application/pdf" });
+    return navigator.share({
+      files: [arquivo],
+      title: "Recibo RICTEC",
+      text: textoRecibo()
     }).then(function () {
       confirmarNumeracao();
-    }).catch(function (err) {
-      // usuário cancelou a folha de compartilhamento: não faz nada
-      if (err && (err.name === "AbortError" || err.name === "NotAllowedError" && /cancel/i.test(err.message || ""))) return;
-      // qualquer outra falha: recorre ao envio de texto
-      abrirWhatsTexto();
-    }).finally(function () {
-      btn.disabled = false;
-      btn.innerHTML = original;
     });
-  }, 80);
+  }).catch(function (err) {
+    // usuário cancelou a folha de compartilhamento: não faz nada
+    if (err && err.name === "AbortError") return;
+    // qualquer outra falha: recorre ao envio de texto
+    abrirWhatsTexto();
+  }).finally(function () {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  });
 }
 
 /* ===== Novo recibo ===== */
