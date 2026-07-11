@@ -1,0 +1,14 @@
+{
+  "name": "RICTEC · Emissor de Recibos",
+  "short_name": "Recibo RICTEC",
+  "description": "Gere e exporte recibos em PDF pelo celular.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef1f6",
+  "theme_color": "#1b2a4a",
+  "icons": [
+    { "src": "r.jpeg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any" },
+    { "src": "ri.jpeg", "sizes": "1024x1024", "type": "image/jpeg", "purpose": "any" }
+  ]
+}

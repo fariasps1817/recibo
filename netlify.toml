@@ -1,0 +1,10 @@
+# Configuração de deploy no Netlify.
+# Site estático: nenhum build necessário, publica a raiz do repositório.
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
