@@ -10,8 +10,9 @@ rápida pelo celular. Sem banco de dados, sem servidor — roda 100% no navegado
   ferro, manutenção preventiva) + campo livre.
 - **Valor por extenso automático** (padrão de recibo brasileiro).
 - Numeração automática e sequencial dos recibos.
-- Pré-visualização do recibo em tempo real com a logo da empresa.
-- **Exportar em PDF** (formato A5) com um toque.
+- Pré-visualização do recibo (colapsável) com a logo da empresa.
+- **Exportar em PDF** pela impressão nativa do navegador — folha **A4 retrato**,
+  recibo ocupando a **metade superior** com linha de corte, texto nítido (vetorial).
 - **Enviar por WhatsApp** o resumo do recibo em texto.
 - **Dados do emitente** (nome, CPF, telefone, endereço, cidade) salvos no próprio
   aparelho — preenche uma vez e não precisa repetir.
@@ -32,8 +33,7 @@ python -m http.server 8080
 
 | Arquivo | Descrição |
 |---|---|
-| `index.html` | Aplicação completa (HTML + CSS + JS, logo embutida em base64). |
-| `manifest.webmanifest` | Permite "adicionar à tela inicial" no celular. |
+| `index.html` | Aplicação completa (HTML + CSS + JS, logo e manifest embutidos). |
 | `netlify.toml` | Configuração de publicação no Netlify. |
 | `r.jpeg` | Logo da RICTEC (também usada como ícone). |
 | `ri.jpeg` | Panfleto original com os dados da empresa. |
@@ -48,5 +48,7 @@ python -m http.server 8080
 
 ## Tecnologia
 
-HTML, CSS e JavaScript puro. Geração de PDF via
-[html2pdf.js](https://github.com/eKoopmans/html2pdf.js) (carregado por CDN).
+HTML, CSS e JavaScript puro, **sem dependências externas** (nenhum CDN). A geração
+de PDF usa a **impressão nativa** do navegador (`window.print()` + folha de estilo
+`@media print`), garantindo texto vetorial nítido e funcionamento offline. No
+celular, o botão *Baixar PDF* abre a opção **Salvar como PDF / Compartilhar**.
